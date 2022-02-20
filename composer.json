@@ -1,0 +1,19 @@
+{
+    "name": "teyfikahmet/php-router",
+    "type": "library",
+    "version": "0.1.0",
+    "autoload": {
+        "psr-4": {
+            "Teyfikahmet\\PhpRouter\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "teyfikahmet",
+            "email": "ahmetteyfikocalan@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/http-foundation": "^6.0"
+    }
+}
