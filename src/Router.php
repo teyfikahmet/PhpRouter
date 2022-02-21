@@ -2,7 +2,6 @@
 
 /**
  * @author Teyfikahmet
- * @package Teyfikahmet\PhpRouter
  */
 
 namespace Teyfikahmet\PhpRouter;
@@ -34,7 +33,8 @@ class Router
     protected array $routes = [];
     protected $request;
     protected $response;
-    
+    protected $noFoundCallBack = null;
+    protected $errorCallBack = null;
     public function __construct(array $config = [])
     {
         $this->config = $config ? array_merge($this->config, $config) : $this->config;
@@ -74,50 +74,98 @@ class Router
         unset($router);
     }
 
+    /**
+     * @param string $name
+     * @param string $path
+     * @param string | array | Closure $callback
+     * @param string $middleware
+     * @return Router
+     */
     public function any(string $name, string $path, Closure | string | array $callback, string $middleware = "") : Router
     {
         $this->addRoute('ANY', $path, $callback, $name, $middleware);
         return $this;
     }
 
+    /**
+     * @param string $name
+     * @param string $path
+     * @param string | array | Closure $callback
+     * @param string $middleware
+     * @return Router
+     */
     public function get(string $name, string $path, Closure | string | array $callback, string $middleware = "") : Router
     {
         $this->addRoute('GET', $path, $callback, $name, $middleware);
         return $this;
     }
 
+    /**
+     * @param string $name
+     * @param string $path
+     * @param string | array | Closure $callback
+     * @param string $middleware
+     * @return Router
+     */
     public function post(string $name, string $path, Closure | string | array $callback, string $middleware = "") : Router
     {
         $this->addRoute('POST', $path, $callback, $name, $middleware);
         return $this;
     }
 
+    /**
+     * @param string $name
+     * @param string $path
+     * @param string | array | Closure $callback
+     * @param string $middleware
+     * @return Router
+     */
     public function put(string $name, string $path, Closure | string | array $callback, string $middleware = "") : Router
     {
         $this->addRoute('PUT', $path, $callback, $name, $middleware);
         return $this;
     }
 
+    /**
+     * @param string $name
+     * @param string $path
+     * @param string | array | Closure $callback
+     * @param string $middleware
+     * @return Router
+     */
     public function delete(string $name, string $path, Closure | string | array $callback, string $middleware = "") : Router
     {
         $this->addRoute('DELETE', $path, $callback, $name, $middleware);
         return $this;
     }
 
+    /**
+     * @param string $name
+     * @param string $path
+     * @param string | array | Closure $callback
+     * @param string $middleware
+     * @return Router
+     */
     public function patch(string $name, string $path, Closure | string | array $callback, string $middlewares = "") : Router
     {
         $this->addRoute('PATCH', $path, $callback, $name, $middlewares);
         return $this;
     }
 
-    protected $noFoundCallBack = null;
+    /**
+     * @param Closure | string | array $callback
+     * @return Router
+     */
     public function notFound(Closure | string | array $callback) : Router
     {
         $this->noFoundCallBack = $callback;
         return $this;
     }
 
-    protected $errorCallBack = null;
+    /**
+     * @param Closure | string | array $callback
+     * @return Router
+     */
     public function error(Closure | string | array $callback) : Router
     {
         $this->errorCallBack = $callback;
@@ -177,7 +225,7 @@ class Router
         else
             echo "Error: " . $e->getMessage();
     }
-    
+
     protected function runCallback(string | array | Closure $callback, $params = []) : void
     {
         try
@@ -225,7 +273,10 @@ class Router
         }
     }
 
-    public function run()
+    /**
+     * @return void
+     */
+    public function run() : void
     {
         try {
             $path = $this->request->server->get('PATH_INFO');
@@ -253,11 +304,18 @@ class Router
         }
     }
 
-    public function getRoutes()
+    /**
+     * @return array
+     */
+    public function getRoutes(): array
     {
         return $this->routes;
     }
 
+    /**
+     * @param string $name
+     * @return string | bool
+     */
     public function getUrlByName(string $name) : string | bool
     {
         foreach($this->routes as $route)
