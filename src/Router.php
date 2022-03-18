@@ -66,10 +66,8 @@ class Router
         $callback($router);
         $routes = $router->getRoutes();
         foreach($routes as $route) {
-            $name = str_replace('/', '.', $path);
-            $name = substr($name, 0, 1) == '.' ? substr($name, 1) : $name;
-            $name .= '.' . $route['name'];
-            $this->addRoute($route["method"], $route["path"] == '/' ? $path : $path . $route["path"] , $route["callback"], $name, $route["middleware"]);
+            $name = $route['name'];
+            $this->addRoute($route["method"], $route["path"] == '/' ? $path  : $path . $route["path"] , $route["callback"], $name, $route["middleware"]);
         }
         unset($router);
     }
@@ -201,7 +199,7 @@ class Router
                 throw new \Exception("Middleware class must have handle method");
                 return;
             }
-            $params = [$this->request, $this->response, $next];
+            $params = [$this->request, $next];
             call_user_func_array([$middleware, 'handle'], $params);
         }
         catch(\Exception $e)
@@ -243,7 +241,7 @@ class Router
                 if(!method_exists($controller, $method)) {
                     throw new \Exception("Method $method not found in ". $controller::class);
                 }
-                $params = array_merge([$this->request, $this->response], $params);
+                $params = array_merge([$this->request], $params);
                 echo call_user_func_array([$controller, $method], $params);
             }
             else if(is_array($callback))
@@ -258,12 +256,12 @@ class Router
                 if(!method_exists($controller, $method)) {
                     throw new \Exception("Method $method not found in ". $controller::class);
                 }
-                $params = array_merge([$this->request, $this->response], $params);
+                $params = array_merge([$this->request], $params);
                 echo call_user_func_array([$controller, $method], $params);
             }
             else if($callback instanceof Closure)
             {
-                $params = array_merge([$this->request, $this->response], $params);
+                $params = array_merge([$this->request], $params);
                 echo call_user_func_array($callback, $params);
             }
         }
@@ -300,7 +298,7 @@ class Router
             return;
 
         } catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
+            $this->runError($e);
         }
     }
 
@@ -316,13 +314,31 @@ class Router
      * @param string $name
      * @return string | bool
      */
-    public function getUrlByName(string $name) : string | bool
+    public function getUrlByName(string $name, array $params = []) : string | bool
     {
         foreach($this->routes as $route)
         {
             if($route['name'] == $name)
             {
-                return $route['path'];
+                if(!empty($params))
+                {
+                    $routePath = $route['path'];
+                    if(!preg_match_all('/:([a-zA-Z0-9]+)/', $routePath, $matches))
+                        return $routePath;
+                    if(count($matches[0]) == 0)
+                        return $routePath;
+                    if(count($params) != count($matches[0]))
+                        return $routePath;
+                    $patterns = [];
+                    for($i = 0; $i < count($matches[0]); $i++)
+                    {
+                        $patterns[$i] = $matches[0][$i];
+                    }
+                    $routePath = str_replace(array_values($patterns), array_values($params), $routePath);
+                    return $routePath;
+                }
+                else
+                    return $route['path'];
             }
         }
         return false;
